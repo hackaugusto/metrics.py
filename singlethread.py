@@ -3,24 +3,7 @@ import time
 from math import exp
 
 
-class Counter(dict):
-    def inc(self, value=1):
-        self['counter'] = self.get('counter', 0) + value
-
-    def dec(self, value=1):
-        self['counter'] = self.get('counter', 0) - value
-
-    def context(self, value=1):
-        return CounterContext(self, value)
-
-    def __enter__(self):
-        self.inc()
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.dec()
-
-
-class MonotonicCounter(object):
+class MonotonicCounter(dict):
     def inc(self, value=1):
         self['counter'] = self.get('counter', 0) + value
 
@@ -33,26 +16,8 @@ class MonotonicCounter(object):
     def context(self, value=1):
         return MonotonicCounterContext(self, value)
 
-
-class ExceptionCounter(MonotonicCounter):
-    def __enter__(self):
-        pass
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if exc_type is not None:
-            self['exceptions'] = self.get('counter', 0) + 1
-
-
-class CounterContext(object):
-    def __init__(self, counter, value):
-        self.counter = counter
-        self.value = value
-
-    def __enter__(self):
-        self.counter.inc(self.value)
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.counter.dec(self.value)
+    def value(self):
+        return {'counter': self['counter']}
 
 
 class MonotonicCounterContext(object):
@@ -67,9 +32,30 @@ class MonotonicCounterContext(object):
         pass
 
 
+class ExceptionCounter(dict):
+    def __enter__(self):
+        pass
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_type is not None:
+            self['exceptions'] = self.get('exceptions', 0) + 1
+
+    def value(self):
+        return {'exceptions': self['exceptions']}
+
+
 class Gauge(dict):
+    def inc(self, value=1):
+        self['gauge'] = self.get('gauge', 0) + value
+
+    def dec(self, value=1):
+        self['gauge'] = self.get('gauge', 0) - value
+
     def set(self, value):
         self['gauge'] = value
+
+    def value(self):
+        return {'gauge': self['gauge']}
 
 
 class Meter(dict):
@@ -106,6 +92,14 @@ class Meter(dict):
 
             self['mean'] = self.mean()
             self.last_timestamp = now
+
+    def value(self):
+        result = {
+            str(average.window): self[str(average.window)]
+            for average in self.windows
+        }
+        result.extend({'mean': self['mean']})
+        return result
 
 
 class EWMA(object):

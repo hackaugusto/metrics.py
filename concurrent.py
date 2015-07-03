@@ -2,30 +2,40 @@
 import time
 from threading import Lock, RLock
 
-from singlethread import CounterContext, EWMA
+from singlethread import MonotonicCounterContext, EWMA
 
 
-class Counter(dict):
+class MonotonicCounter(dict):
     def __init__(self, *args, **kwargs):
-        super(Counter, self).__init__(*args, **kwargs)
+        super(MonotonicCounter, self).__init__(*args, **kwargs)
         self._lock = Lock()
 
     def inc(self, value=1):
         with self._lock:
             self['counter'] = self.get('counter', 0) + value
 
-    def dec(self, value=1):
-        with self._lock:
-            self['counter'] = self.get('counter', 0) - value
-
     def context(self, value=1):
-        return CounterContext(self, value)
+        return MonotonicCounterContext(self, value)
 
     def __enter__(self):
         self.inc()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.dec()
+        pass
+
+
+class ExceptionCounter(dict):
+    def __init__(self, *args, **kwargs):
+        super(MonotonicCounter, self).__init__(*args, **kwargs)
+        self._lock = RLock()
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_type is not None:
+            with self._lock:
+                self['exceptions'] = self.get('exceptions', 0) + 1
 
 
 class Meter(dict):
