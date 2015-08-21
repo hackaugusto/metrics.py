@@ -1,4 +1,5 @@
 # -*- coding: utf8 -*-
+import copy
 import time
 from math import exp
 
@@ -73,10 +74,29 @@ class Gauge(dict):
         return {'gauge': self['gauge']}
 
 
+class SimpleHistogram(dict):
+    '''A static histogram, you need to define the buckets a priori'''
+    def __init__(self, buckets, *args, **kwargs):
+        self.buckets = {
+            float(bucket): 0
+            for bucket in buckets
+        }
+        self.buckets.setdefault(float('inf'), 0)
+
+        super(SimpleHistogram, self).__init__(*args, **kwargs)
+
+    def mark(self, value):
+        for bucket in self.buckets.keys():
+            if value <= bucket:
+                self.buckets[bucket] = self.buckets.get(bucket, 0) + 1
+
+    @property
+    def value(self):
+        return copy.deepcopy(self.buckets)
+
+
 class Meter(dict):
     def __init__(self, interval, windows, *args, **kwargs):
-        super(Meter, self).__init__(*args, **kwargs)
-
         self.start_timestamp = time.time()
         self.last_timestamp = self.start_timestamp
         self.interval = interval
@@ -86,6 +106,8 @@ class Meter(dict):
             EWMA(interval, seconds)
             for seconds in windows
         ]
+
+        super(Meter, self).__init__(*args, **kwargs)
 
     def mean(self):
         elapsed = time.time() - self.start_timestamp
