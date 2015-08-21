@@ -2,13 +2,14 @@
 import time
 from threading import Lock, RLock
 
-from singlethread import MonotonicCounterContext, EWMA
+from .singlethread import MonotonicCounterContext, EWMA
 
 
 class MonotonicCounter(dict):
     def __init__(self, *args, **kwargs):
-        super(MonotonicCounter, self).__init__(*args, **kwargs)
+        self['counter'] = 0
         self._lock = Lock()
+        super(MonotonicCounter, self).__init__(*args, **kwargs)
 
     def inc(self, value=1):
         with self._lock:
@@ -23,11 +24,16 @@ class MonotonicCounter(dict):
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass
 
+    @property
+    def value(self):
+        return {'counter': self['counter']}
+
 
 class ExceptionCounter(dict):
     def __init__(self, *args, **kwargs):
-        super(MonotonicCounter, self).__init__(*args, **kwargs)
+        self['exceptions'] = 0
         self._lock = RLock()
+        super(MonotonicCounter, self).__init__(*args, **kwargs)
 
     def __enter__(self):
         pass
@@ -36,6 +42,10 @@ class ExceptionCounter(dict):
         if exc_type is not None:
             with self._lock:
                 self['exceptions'] = self.get('exceptions', 0) + 1
+
+    @property
+    def value(self):
+        return {'exceptions': self['exceptions']}
 
 
 class Meter(dict):
@@ -76,3 +86,12 @@ class Meter(dict):
 
                 self['mean'] = self.mean()
                 self.last_timestamp = now
+
+    @property
+    def value(self):
+        result = {
+            str(average.window): self[str(average.window)]
+            for average in self.windows
+        }
+        result.extend({'mean': self['mean']})
+        return result

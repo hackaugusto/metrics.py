@@ -1,5 +1,5 @@
 # -*- coding: utf8 -*-
-from metrics import MonotonicCounter, Gauge, ExceptionCounter, Meter
+from . import MonotonicCounter, Gauge, ExceptionCounter, Meter
 
 
 def _factory(type_, klass):

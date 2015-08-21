@@ -4,6 +4,10 @@ from math import exp
 
 
 class MonotonicCounter(dict):
+    def __init__(self, *args, **kwargs):
+        self['counter'] = 0
+        super(MonotonicCounter, self).__init__(*args, **kwargs)
+
     def inc(self, value=1):
         self['counter'] = self.get('counter', 0) + value
 
@@ -16,6 +20,7 @@ class MonotonicCounter(dict):
     def context(self, value=1):
         return MonotonicCounterContext(self, value)
 
+    @property
     def value(self):
         return {'counter': self['counter']}
 
@@ -33,6 +38,10 @@ class MonotonicCounterContext(object):
 
 
 class ExceptionCounter(dict):
+    def __init__(self, *args, **kwargs):
+        self['exceptions'] = 0
+        super(ExceptionCounter, self).__init__(*args, **kwargs)
+
     def __enter__(self):
         pass
 
@@ -40,11 +49,16 @@ class ExceptionCounter(dict):
         if exc_type is not None:
             self['exceptions'] = self.get('exceptions', 0) + 1
 
+    @property
     def value(self):
-        return {'exceptions': self['exceptions']}
+        return {'exceptions': self['counter']}
 
 
 class Gauge(dict):
+    def __init__(self, *args, **kwargs):
+        self['gauge'] = 0
+        super(Gauge, self).__init__(*args, **kwargs)
+
     def inc(self, value=1):
         self['gauge'] = self.get('gauge', 0) + value
 
@@ -54,6 +68,7 @@ class Gauge(dict):
     def set(self, value):
         self['gauge'] = value
 
+    @property
     def value(self):
         return {'gauge': self['gauge']}
 
@@ -93,6 +108,7 @@ class Meter(dict):
             self['mean'] = self.mean()
             self.last_timestamp = now
 
+    @property
     def value(self):
         result = {
             str(average.window): self[str(average.window)]

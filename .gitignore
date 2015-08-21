@@ -2,3 +2,7 @@
 *.ipynb
 __pycache__
 *.pyc
+build
+dist
+metrics.py.egg-info
+/.tox

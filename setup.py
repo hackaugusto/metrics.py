@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import sys
 
-from setuptools import setup
+from setuptools import setup, find_packages
 from setuptools.command.test import test
 
 
@@ -28,7 +28,7 @@ setup(
     author_email='hack.augusto@gmail.com',
     license='MIT',
 
-    py_modules=['metrics'],
+    packages=find_packages(),
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',

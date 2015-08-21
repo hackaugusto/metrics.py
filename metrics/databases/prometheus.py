@@ -3,10 +3,16 @@ from __future__ import absolute_import
 
 import threading
 from itertools import starmap
-from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
-from SocketServer import ThreadingMixIn
 
-from manager import manager as global_manager
+try:
+    from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
+    from SocketServer import ThreadingMixIn
+except ImportError:
+    from http.server import HTTPServer, BaseHTTPRequestHandler
+    from socketserver import ThreadingMixIn
+
+
+from ..manager import manager as global_manager
 
 
 def infinity(value):
@@ -48,10 +54,12 @@ class PrometheusHandler(BaseHTTPRequestHandler):
 
         response = []
         for metric in self.server.manager.metrics.values():
-            metric = dict(metric)
+            metric = type(metric)(metric)
             response.append(to_prometheus(metric))
 
-        self.wfile.write('\n'.join(response).encode('utf8'))
+        response = '\n'.join(response) + '\n'
+        print(response)
+        self.wfile.write(response.encode('utf8'))
 
 
 class Prometheus(object):
