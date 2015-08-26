@@ -53,7 +53,7 @@ class PrometheusHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
         response = []
-        for metric in self.server.manager.metrics.values():
+        for metric in self.server.manager.metrics:
             metric = type(metric)(metric)
             response.append(to_prometheus(metric))
 
