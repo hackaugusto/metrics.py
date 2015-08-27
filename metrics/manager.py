@@ -39,21 +39,16 @@ class Manager(dict):
     def with_tags(self, name, kind, tags):
         metrics_tags = self.metrics_name.setdefault(name, {})
 
-        print(name, kind, tags)
         try:
             metric = metrics_tags[tags_key(tags)]
         except KeyError:
             metric = metrics_tags[tags_key(tags)] = getattr(self, kind)(name, **tags)
 
-        print(self.metrics_name)
-        print(id(manager))
         with metric:
             yield
 
     @property
     def metrics(self):
-        print(id(manager))
-        print(self.metrics_name)
         for metrics_tags in self.metrics_name.values():
             for metric in metrics_tags.values():
                 yield metric
